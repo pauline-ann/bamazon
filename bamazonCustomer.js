@@ -17,7 +17,7 @@ connection.connect(function (err) {
 
 function queryAllProducts() {
     connection.query("SELECT * FROM products", function (err, res) {
-        console.log("~*~*~*~* Products Available For Sale *~*~*~*~")
+        console.log("~*~*~*~* Products Available For Sale *~*~*~*~");
         for (let i = 0; i < res.length; i++) {
             console.log(res[i].item_id + ") " + res[i].product_name + " | " + res[i].department_name + " | $" + res[i].price + " | " + res[i].stock_quantity + " left");
         }
@@ -44,49 +44,53 @@ function promptUser() {
             var item_id = parseInt(answer.item_id);
             var unitsBought = parseInt(answer.unitsBought);
 
-            connection.query("SELECT * FROM products", function (err, res) {
-                for (var i = 0; i < res.length; i++) {
-                    console.log("Product #" + item_id)
-                    var product = res[item_id - 1];
-                    if (product.item_id === item_id && product.stock_quantity >= unitsBought) {
-
-                        console.log("Purchasing " + unitsBought + " units of " + product.product_name);
-                        var newQuantity = product.stock_quantity - unitsBought;
-
-                        connection.query("UPDATE products SET ? WHERE ?",
-                            [
-                                {
-                                    stock_quantity: newQuantity
-                                },
-                                {
-                                    item_id: product.item_id
-                                }
-                            ],
-                            function (err, res) {
-                                if (err) throw err;
-                                console.log("Product purchased successfully!");
-                                console.log("Total cost: $" + (unitsBought * product.price));
-                                buyAgainPrompt();
-                            });
-                        break;
+            if (isNaN(item_id) === true || isNaN(unitsBought) === true) {
+                console.log("Error: input numbers only.");
+                promptUser();
+            }
+            else {
+                connection.query("SELECT * FROM products", function (err, res) {
+                    for (var i = 0; i < res.length; i++) {
+                        console.log("Product #" + item_id);
+                        var product = res[item_id - 1];
+                        if (product.item_id === item_id && product.stock_quantity >= unitsBought) {
+                            console.log("Purchasing " + unitsBought + " units of " + product.product_name);
+                            var newQuantity = product.stock_quantity - unitsBought;
+                            connection.query("UPDATE products SET ? WHERE ?",
+                                [
+                                    {
+                                        stock_quantity: newQuantity
+                                    },
+                                    {
+                                        item_id: product.item_id
+                                    }
+                                ],
+                                function (err, res) {
+                                    if (err) throw err;
+                                    console.log("Product purchased successfully!");
+                                    console.log("Total cost: $" + (unitsBought * product.price));
+                                    buyAgainPrompt();
+                                });
+                            break;
+                        }
+                        else if (product.item_id !== item_id && product.stock_quantity < unitsBought) {
+                            console.log("Please choose a valid item ID and quantity.");
+                            promptUser();
+                            break;
+                        }
+                        else if (product.item_id !== item_id) {
+                            console.log("Please choose a valid item ID.");
+                            promptUser();
+                            break;
+                        }
+                        else if (product.stock_quantity < unitsBought) {
+                            console.log("Insufficient quantity. Please choose again.");
+                            promptUser();
+                            break;
+                        }
                     }
-                    else if (product.item_id !== item_id && product.stock_quantity < unitsBought) {
-                        console.log("Please choose a valid item ID and quantity.")
-                        promptUser();
-                        break;
-                    }
-                    else if (product.item_id !== item_id) {
-                        console.log("Please choose a valid item ID.")
-                        promptUser();
-                        break;
-                    }
-                    else if (product.stock_quantity < unitsBought) {
-                        console.log("Insufficient quantity. Please choose again.")
-                        promptUser();
-                        break;
-                    }
-                }
-            });
+                });
+            }
         });
 };
 
@@ -104,7 +108,7 @@ function buyAgainPrompt() {
                 queryAllProducts();
             }
             else {
-                console.log("Thanks for using Bamazon :-)")
+                console.log("Thanks for using Bamazon :-)");
             }
         });
 };
